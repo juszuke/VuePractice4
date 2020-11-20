@@ -4,10 +4,10 @@
 
     <div>
       <div>メールアドレス
-        <input type="text" v-model="email">
+        <input type="text" placeholder="email" v-model="email">
       </div>
       <div>パスワード
-        <input type="password" v-model="password">
+        <input type="password" placeholder="password" v-model="password">
       </div>
     </div>
 
@@ -21,8 +21,9 @@
 </template>
 
 <script>
-import firebase from 'firebase'
+// import firebase from 'firebase'
 import Header from '@/components/Header.vue'
+import { mapActions } from 'vuex'
 
 export default {
   name: 'SignIn',
@@ -31,21 +32,27 @@ export default {
   },
   data () {
     return {
-      email: '',
-      password: ''
+      email: null,
+      password: null
     }
   },
   methods: {
-    signIn: function () {
-      firebase.auth().signInWithEmailAndPassword(this.email, this.password)
-      .then(() => {
-        alert('Success!')
-        this.$router.push('/')
-      })
-      .catch(error => {
-        alert(error.message)
-      })
+    ...mapActions([
+      'SIGN_IN'
+    ]),
+    signIn() {
+      this.SIGN_IN({ email: this.email, password: this.password })
     }
+  //   signIn: function () {
+  //     firebase.auth().signInWithEmailAndPassword(this.email, this.password)
+  //     .then(() => {
+  //       console.log('Success!')
+  //       this.$router.push('/')
+  //     })
+  //     .catch(error => {
+  //       console.log(error.message)
+  //     })
+    // }
   }
 }
 </script>

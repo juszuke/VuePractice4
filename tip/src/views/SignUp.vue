@@ -4,13 +4,13 @@
 
     <div>
       <div>ユーザー名
-        <input type="text" v-model="name">
+        <input type="text" placeholder="username" v-model="name">
       </div>
       <div>メールアドレス
-        <input type="text" v-model="email">
+        <input type="text" placeholder="email" v-model="email">
       </div>
       <div>パスワード
-        <input type="password" v-model="password">
+        <input type="password" placeholder="password" v-model="password">
       </div>
     </div>
 
@@ -24,8 +24,9 @@
 </template>
 
 <script>
-import firebase from 'firebase'
+// import firebase from 'firebase'
 import Header from '@/components/Header.vue'
+import { mapActions } from 'vuex'
 
 export default {
   name: 'SignUp',
@@ -40,26 +41,39 @@ export default {
     }
   },
   methods: {
-    signUp: function () {
-      firebase.auth().createUserWithEmailAndPassword(this.email, this.password)
-      .then(user => {
-        alert('Create account',user.email)
-        firebase.auth().signInWithEmailAndPassword(this.email, this.password)
-      })
-      .catch(error => {
-        alert(error.message)
-      })
-      firebase.firestore().collection('users').add({
-        name: this.name,
-        wallet: 0
-      })
-      .then(function(docRef) {
-        console.log('Document written with ID: ', docRef.id);
-      })
-      .catch(function(error) {
-        console.error('Error adding document: ', error);
-      });
+    ...mapActions([
+      'SIGN_UP'
+    ]),
+    signUp() {
+      this.SIGN_UP({ email: this.email, password: this.password })
     }
+    // signUp: function () {
+    //   firebase.auth().createUserWithEmailAndPassword(this.email, this.password)
+    //   .then(() => {
+    //     firebase.auth().signInWithEmailAndPassword(this.email, this.password)
+    //   })
+    //   .then(() => {
+    //     this.$router.push('/')
+    //   })
+    //   .catch(error => {
+    //     console.log(error.message)
+    //   })
+    //   .then(() => {
+    //     firebase.firestore().collection('users')
+    //     .doc(firebase.auth().currentUser.uid)
+    //     .set({
+    //       email: this.email,
+    //       name: this.name,
+    //       wallet: 0
+    //     })
+    //     // .then(function(docRef) {
+    //     //   console.log('Document written with ID: ', docRef.id);
+    //     // })
+    //     // .catch(function(error) {
+    //     //   console.error('Error adding document: ', error);
+    //     // });
+    //   })
+    // }
   }
 }
 </script>
