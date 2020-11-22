@@ -1,8 +1,8 @@
 <template>
   <div class="home">
     <div>
-      <span>{{ getUser.name }}さんようこそ！！</span>
-      <span>残高: {{ getUser.wallet }}</span>
+      <span>{{ name }}さんようこそ！！</span>
+      <span>残高: {{ wallet }}</span>
       <button @click="signOut">ログアウト</button>
       <button @click="test">テスト</button>
     </div>
@@ -20,15 +20,19 @@ export default {
   components: {
     Header
   },
-  // data () {
-  //   return {
-  //     name: firebase.auth().currentUser.email,
-  //     wallet: 0
-  //   }
-  // },
+  data () {
+    return {
+      name: null,
+      // name: firebase.auth().currentUser.email,
+      wallet: 0
+    }
+  },
+  mounted () {
+    this.AUTH
+  },
   computed: {
     ...mapState([
-      'currentUser'
+      // 'currentUser'
     ]),
     ...mapGetters([
       'getUser',
@@ -37,29 +41,23 @@ export default {
   },
   methods: {
     ...mapActions([
+      'AUTH',
       'SIGN_OUT'
     ]),
     signOut() {
-      this.SIGN_OUT();
+      this.SIGN_OUT()
+      this.$router.push('/sign-in')
     },
-    // signOut: function () {
-    //   firebase.auth().signOut()
-    //   .then(() => {
-    //     this.$router.push('/sign-in')
-    //     console.log('Success!')
-    //   })
-    //   .catch(error => {
-    //     console.log(error.message)
-    //   })
-    // },
     test: function () {
       const db = firebase.firestore()
       const uid = firebase.auth().currentUser.uid
       const userRef = db.collection('users').doc(uid)
       const userDoc = userRef.get()
-      console.log(userRef)
-      console.log(userDoc.data())
-      console.log(userDoc.data(name))
+      .then(() => {
+        console.log(userRef)
+        console.log(userDoc)
+        console.log(userDoc.data())
+      })
     }
   }
 }

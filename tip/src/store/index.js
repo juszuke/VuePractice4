@@ -29,13 +29,43 @@ export default new Vuex.Store({
     }
   },
   actions: {
+    AUTH ({ commit }) {
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          commit("setUser", user);
+        } else {
+          commit("setUser", null);
+        }
+      })
+    },  
     SIGN_UP ({ commit }, payload) {
       firebase
         .auth()
         .createUserWithEmailAndPassword(payload.email, payload.password)
+        .then(() => {
+          firebase
+            .auth()
+            .signInWithEmailAndPassword(payload.email, payload.password)
+            .then(response => {
+              commit('setUser', response.user)
+            })
+            .catch(error => {
+              commit('setError', error.message)
+            })
+        })
+        .then(() => {
+          console.log(firebase.auth().currentUser.uid)
+          firebase.firestore().collection('users')
+          .doc(firebase.auth().currentUser.uid)
+          .set({
+            email: payload.email,
+            name: payload.name,
+            wallet: 0
+          })
         .catch(error => {
           commit("setError", error.message);
-        });
+        })
+      })
     },
     SIGN_IN ({ commit }, payload) {
       firebase
@@ -43,8 +73,6 @@ export default new Vuex.Store({
         .signInWithEmailAndPassword(payload.email, payload.password)
         .then(response => {
           commit('setUser', response.user)
-          console.log('Success!')
-          this.$router.push('/')
         })
         .catch(error => {
           commit('setError', error.message)
@@ -56,6 +84,7 @@ export default new Vuex.Store({
         .signOut()
         .then(() => {
           commit('setUser', null)
+          this.$router.push('/sign-in')
         })
         .catch(error => {
           commit('setError', error.message)

@@ -42,17 +42,8 @@ export default {
     ]),
     signIn() {
       this.SIGN_IN({ email: this.email, password: this.password })
+      this.$router.push('/')
     }
-  //   signIn: function () {
-  //     firebase.auth().signInWithEmailAndPassword(this.email, this.password)
-  //     .then(() => {
-  //       console.log('Success!')
-  //       this.$router.push('/')
-  //     })
-  //     .catch(error => {
-  //       console.log(error.message)
-  //     })
-    // }
   }
 }
 </script>

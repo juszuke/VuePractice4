@@ -35,9 +35,9 @@ export default {
   },
   data () {
     return {
-      name: '',
-      email: '',
-      password: ''
+      name: null,
+      email: null,
+      password: null
     }
   },
   methods: {
@@ -45,35 +45,9 @@ export default {
       'SIGN_UP'
     ]),
     signUp() {
-      this.SIGN_UP({ email: this.email, password: this.password })
+      this.SIGN_UP({ email: this.email, name: this.name, password: this.password })
+      this.$router.push('/')
     }
-    // signUp: function () {
-    //   firebase.auth().createUserWithEmailAndPassword(this.email, this.password)
-    //   .then(() => {
-    //     firebase.auth().signInWithEmailAndPassword(this.email, this.password)
-    //   })
-    //   .then(() => {
-    //     this.$router.push('/')
-    //   })
-    //   .catch(error => {
-    //     console.log(error.message)
-    //   })
-    //   .then(() => {
-    //     firebase.firestore().collection('users')
-    //     .doc(firebase.auth().currentUser.uid)
-    //     .set({
-    //       email: this.email,
-    //       name: this.name,
-    //       wallet: 0
-    //     })
-    //     // .then(function(docRef) {
-    //     //   console.log('Document written with ID: ', docRef.id);
-    //     // })
-    //     // .catch(function(error) {
-    //     //   console.error('Error adding document: ', error);
-    //     // });
-    //   })
-    // }
   }
 }
 </script>
