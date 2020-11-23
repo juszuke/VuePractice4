@@ -1,8 +1,8 @@
 <template>
   <div class="home">
     <div>
-      <span>{{ name }}さんようこそ！！</span>
-      <span>残高: {{ wallet }}</span>
+      <span v-if="$store.state.user">{{ $store.state.user.name }}さんようこそ！！</span>
+      <span v-if="$store.state.user">残高: {{ $store.state.user.wallet }}</span>
       <button @click="signOut">ログアウト</button>
       <button @click="test">テスト</button>
     </div>
@@ -20,19 +20,12 @@ export default {
   components: {
     Header
   },
-  data () {
-    return {
-      name: null,
-      // name: firebase.auth().currentUser.email,
-      wallet: 0
-    }
-  },
   mounted () {
     this.AUTH
   },
   computed: {
     ...mapState([
-      // 'currentUser'
+      'user'
     ]),
     ...mapGetters([
       'getUser',
@@ -46,17 +39,19 @@ export default {
     ]),
     signOut() {
       this.SIGN_OUT()
-      this.$router.push('/sign-in')
+      // this.$router.push('/sign-in')
     },
-    test: function () {
+    test() {
       const db = firebase.firestore()
       const uid = firebase.auth().currentUser.uid
       const userRef = db.collection('users').doc(uid)
       const userDoc = userRef.get()
-      .then(() => {
-        console.log(userRef)
-        console.log(userDoc)
-        console.log(userDoc.data())
+      userDoc.then((querySnapshot) => {
+        console.log(querySnapshot)
+        console.log(typeof(querySnapshot))
+        querySnapshot.forEach((doc) => {
+            console.dir(`${doc.id} => ${JSON.stringify(doc.data())}`);
+        })
       })
     }
   }
