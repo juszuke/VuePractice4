@@ -5,6 +5,7 @@ import store from './store'
 import { firebase } from '@firebase/app'
 import '@firebase/auth'
 import '@firebase/firestore'
+import VModal from 'vue-js-modal'
 
 Vue.config.productionTip = false
 
@@ -30,3 +31,5 @@ new Vue({
   store,
   render: h => h(App)
 }).$mount('#app')
+
+Vue.use(VModal)
