@@ -8,11 +8,7 @@ export default new Vuex.Store({
   state: {
     user: null,
     users: null,
-    selectedUser: {
-      email: "b@b.com",
-      name: "b",
-      wallet: 0
-    },
+    selectedUser: null,
     error: null
   },
   mutations: {

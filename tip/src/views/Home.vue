@@ -35,8 +35,7 @@
         </tr>
       </tbody>
     </table>
-    <modal name='wallet' :width="300" :height="150">
-      <div></div>
+    <modal name='wallet' v-if="$store.state.selectedUser" :width="300" :height="150">
       <p>{{ $store.state.selectedUser.name }}さんの残高</p>
       <p>{{ $store.state.selectedUser.wallet }}</p>
       <button @click="hideWallet">閉じる</button>
