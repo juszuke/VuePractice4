@@ -1,8 +1,8 @@
 <template>
   <div class="home">
     <div>
-      <span v-if="$store.state.user">{{ $store.state.user.name }}さんようこそ！！</span>
-      <span v-if="$store.state.user">残高: {{ $store.state.user.wallet }}</span>
+      <span v-if="$store.getters.user">{{ $store.getters.user.name }}さんようこそ！！</span>
+      <span v-if="$store.getters.user">残高: {{ $store.getters.user.wallet }}</span>
       <button @click="signOut">ログアウト</button>
     </div>
 
@@ -16,37 +16,41 @@
           <th class="tip"></th>
         </tr>
       </thead>
-      <tbody v-if="$store.state.users">
+      <tbody v-if="$store.getters.users">
         <tr
-          v-for="user in $store.state.users"
+          v-for="user in $store.getters.users"
           :key="user.name">
           <td>{{ user.name }}</td>
           <td class="state">
-            <button @click="showWallet(user.name)">
-            <!-- <button @click="GET_SELECTED_USER(user.name)"> -->
+            <button @click="showWalletModal(user.name)">
               wallet
             </button>
           </td>
           <td class="button">
-            <button>
+            <button @click="showTipModal(user.name)">
               送る
             </button>
           </td>
         </tr>
       </tbody>
     </table>
-    <modal name='wallet' v-if="$store.state.selectedUser" :width="300" :height="150">
-      <p>{{ $store.state.selectedUser.name }}さんの残高</p>
-      <p>{{ $store.state.selectedUser.wallet }}</p>
-      <button @click="hideWallet">閉じる</button>
+    <modal name='wallet' v-if="$store.getters.selectedUser" :width="300" :height="150">
+      <p>{{ $store.getters.selectedUser.name }}さんの残高</p>
+      <p>{{ $store.getters.selectedUser.wallet }}</p>
+      <button @click="hideWalletModal">閉じる</button>
+    </modal>
+    <modal name='tip' v-if="$store.getters.selectedUser" :width="300" :height="150">
+      <p>あなたの残高：{{ $store.getters.user.wallet }}</p>
+      <p>送る金額</p>
+      <input type="text" v-model="tip"><br>
+      <button @click="tipSelectedUser">送信</button>
     </modal>
   </div>
 </template>
 
 <script>
-// import firebase from 'firebase'
 import Header from '@/components/Header.vue'
-import { mapState, mapGetters, mapActions } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 
 export default {
   name: 'Home',
@@ -60,35 +64,52 @@ export default {
     ...mapState([
       'user',
       'users',
-      'selectedUser'
+      'selectedUser',
+      'tip'
     ]),
-    ...mapGetters([
-      'getUser',
-      'getUsers',
-      'getSelectedUser',
-      'isUserAuth'
-    ]),
+    tip: {
+      get() {
+        return this.$store.state.tip
+      },
+      set(tip) {
+        this.$store.commit('setTip', Number(tip))
+      }
+    }
   },
   methods: {
     ...mapActions([
-      'AUTH',
-      'SIGN_OUT',
-      'GET_SELECTED_USER'
+      'auth'
     ]),
     signOut() {
-      this.$store.dispatch('SIGN_OUT')
+      this.$store.dispatch('signOut')
       .then(() => {
         setTimeout(() => {
           this.$router.push('/sign-in')
         }, 1500)
       })
     },
-    showWallet(name) {
-      this.$store.dispatch('GET_SELECTED_USER', name)
-      this.$modal.show('wallet')
+    showWalletModal(name) {
+      this.$store.dispatch('getSelectedUser', name)
+      .then(() => {
+        setTimeout(() => {
+          this.$modal.show('wallet')
+        }, 500)
+      })
     },
-    hideWallet() {
+    hideWalletModal() {
       this.$modal.hide('wallet')
+    },
+    showTipModal(name) {
+      this.$store.dispatch('getSelectedUser', name)
+      .then(() => {
+        setTimeout(() => {
+          this.$modal.show('tip')
+        }, 500)
+      })
+    },
+    tipSelectedUser(name) {
+      this.$store.dispatch('tipSelectedUser', name)
+      this.$modal.hide('tip')
     }
   }
 }
