@@ -38,11 +38,13 @@ export default {
   },
   methods: {
     ...mapActions([
-      'SIGN_IN'
+      'SIGN_IN',
     ]),
     signIn() {
-      this.SIGN_IN({ email: this.email, password: this.password })
-      this.$router.push('/')
+      this.$store.dispatch('SIGN_IN', { email: this.email, password: this.password })
+      setTimeout(() => {
+        this.$router.push('/')
+      }, 1500)
     }
   }
 }

@@ -7,11 +7,19 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     user: null,
+    users: null,
+    selectedUser: null,
     error: null
   },
   mutations: {
     setUser(state, payload) {
       state.user = payload;
+    },
+    setUsers(state, payload) {
+      state.users = payload;
+    },
+    setSelectedUser(state, payload) {
+      state.selectedUser = payload;
     },
     setError(state, payload) {
       state.error = payload;
@@ -20,6 +28,12 @@ export default new Vuex.Store({
   getters: {
     getUser(state) {
       return state.user;
+    },
+    getUsers(state) {
+      return state.users;
+    },
+    getSelectedUser(state) {
+      return state.selectedUser;
     },
     isUserAuth(state) {
       return !!state.user;
@@ -38,20 +52,38 @@ export default new Vuex.Store({
         }
       })
     },  
-    SIGN_UP ({ commit }, payload) {
+    GET_USERS ({ commit }) {
+      const db = firebase.firestore()
+      const userRef = db.collection('users')
+      const userDoc = userRef.get() 
+      userDoc.then((querySnapshot) => {
+        const userDocs = querySnapshot.docs.map(doc => doc.data())
+        const currentUserIndex = userDocs.findIndex(
+          item => item.name === this.state.user.name
+        )
+        if (-1 < currentUserIndex) {
+          userDocs.splice(currentUserIndex, 1)
+        }
+        commit("setUsers", userDocs)
+      })
+    },
+    GET_SELECTED_USER ({ commit }, payload) {
+      const selectedUserIndex = this.state.users.findIndex(
+        item => item.name === payload
+      )
+      if (-1 < selectedUserIndex) {
+        commit("setSelectedUser", this.state.users[selectedUserIndex])
+      }
+    },
+    SIGN_UP ({ dispatch, commit }, payload) {
       firebase
         .auth()
         .createUserWithEmailAndPassword(payload.email, payload.password)
         .then(() => {
-          firebase
-            .auth()
-            .signInWithEmailAndPassword(payload.email, payload.password)
-            .then(response => {
-              commit('setUser', response.user)
-            })
-            .catch(error => {
-              commit('setError', error.message)
-            })
+          dispatch('SIGN_IN', {
+            email: payload.email,
+            password: payload.password
+          })
         })
         .then(() => {
           console.log(firebase.auth().currentUser.uid)
@@ -62,17 +94,29 @@ export default new Vuex.Store({
             name: payload.name,
             wallet: 0
           })
+          .then(() => {
+            dispatch('GET_USERS')
+          })
         .catch(error => {
           commit("setError", error.message);
         })
       })
     },
-    SIGN_IN ({ commit }, payload) {
+    SIGN_IN ({ dispatch, commit }, payload) {
       firebase
         .auth()
         .signInWithEmailAndPassword(payload.email, payload.password)
-        .then(response => {
-          commit('setUser', response.user)
+        .then(() => {
+          const db = firebase.firestore()
+          const uid = firebase.auth().currentUser.uid
+          const userRef = db.collection('users').doc(uid)
+          const userDoc = userRef.get()
+          userDoc.then((doc) => {
+            commit('setUser', doc.data())
+          })
+          .then(() => {
+            dispatch('GET_USERS')
+          })
         })
         .catch(error => {
           commit('setError', error.message)
@@ -84,7 +128,6 @@ export default new Vuex.Store({
         .signOut()
         .then(() => {
           commit('setUser', null)
-          this.$router.push('/sign-in')
         })
         .catch(error => {
           commit('setError', error.message)

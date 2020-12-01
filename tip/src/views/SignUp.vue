@@ -42,11 +42,15 @@ export default {
   },
   methods: {
     ...mapActions([
-      'SIGN_UP'
+      'SIGN_UP',
     ]),
     signUp() {
       this.SIGN_UP({ email: this.email, name: this.name, password: this.password })
-      this.$router.push('/')
+      .then(() => {
+        setTimeout(() => {
+          this.$router.push('/')
+        }, 1500)
+      })
     }
   }
 }
