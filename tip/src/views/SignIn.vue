@@ -21,9 +21,7 @@
 </template>
 
 <script>
-// import firebase from 'firebase'
 import Header from '@/components/Header.vue'
-import { mapActions } from 'vuex'
 
 export default {
   name: 'SignIn',
@@ -32,16 +30,13 @@ export default {
   },
   data () {
     return {
-      email: null,
-      password: null
+      email: '',
+      password: ''
     }
   },
   methods: {
-    ...mapActions([
-      'SIGN_IN',
-    ]),
     signIn() {
-      this.$store.dispatch('SIGN_IN', { email: this.email, password: this.password })
+      this.$store.dispatch('signIn', { email: this.email, password: this.password })
       setTimeout(() => {
         this.$router.push('/')
       }, 1500)

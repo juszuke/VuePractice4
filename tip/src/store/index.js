@@ -6,44 +6,67 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    user: null,
-    users: null,
-    selectedUser: null,
-    error: null
+    user: {
+      email: '',
+      name: '',
+      wallet: '',
+    },
+    selectedUser: {
+      email: '',
+      name: '',
+      wallet: '',
+    },
+    users: [],
+    error: '',
+    tip: ''
   },
   mutations: {
-    setUser(state, payload) {
-      state.user = payload;
+    setUser(state, user) {
+      state.user = user;
     },
-    setUsers(state, payload) {
-      state.users = payload;
+    setUsers(state, users) {
+      state.users = users.slice();
     },
-    setSelectedUser(state, payload) {
-      state.selectedUser = payload;
+    setSelectedUser(state, selectedUser) {
+      state.selectedUser = selectedUser;
     },
-    setError(state, payload) {
-      state.error = payload;
+    setError(state, error) {
+      state.error = error;
     },
+    setTip(state, tip) {
+      state.tip = tip;
+    },
+    // まだいじっている途中
+    moneyTransfer(state) {
+      console.log(typeof(state.user.wallet))
+      console.log(typeof(state.selectedUser.wallet))
+      console.log(typeof(state.tip))
+      state.user.wallet -= state.tip
+      state.selectedUser.wallet += state.tip
+    }
   },
   getters: {
-    getUser(state) {
+    user(state) {
       return state.user;
     },
-    getUsers(state) {
+    selectedUser(state) {
+      return state.selectedUser;
+    },
+    users(state) {
       return state.users;
     },
-    getSelectedUser(state) {
-      return state.selectedUser;
+    error(state) {
+      return state.error;
+    },
+    tip(state) {
+      return state.tip;
     },
     isUserAuth(state) {
       return !!state.user;
-    },
-    getError(state) {
-      return state.error;
     }
   },
   actions: {
-    AUTH ({ commit }) {
+    auth ({ commit }) {
       firebase.auth().onAuthStateChanged(user => {
         if (user) {
           commit("setUser", user);
@@ -52,7 +75,7 @@ export default new Vuex.Store({
         }
       })
     },  
-    GET_USERS ({ commit }) {
+    getUsers ({ commit }) {
       const db = firebase.firestore()
       const userRef = db.collection('users')
       const userDoc = userRef.get() 
@@ -67,45 +90,44 @@ export default new Vuex.Store({
         commit("setUsers", userDocs)
       })
     },
-    GET_SELECTED_USER ({ commit }, payload) {
+    getSelectedUser ({ commit }, selectedUser) {
       const selectedUserIndex = this.state.users.findIndex(
-        item => item.name === payload
+        user => user.name === selectedUser
       )
       if (-1 < selectedUserIndex) {
         commit("setSelectedUser", this.state.users[selectedUserIndex])
       }
     },
-    SIGN_UP ({ dispatch, commit }, payload) {
+    signUp ({ dispatch, commit }, user) {
       firebase
         .auth()
-        .createUserWithEmailAndPassword(payload.email, payload.password)
+        .createUserWithEmailAndPassword(user.email, user.password)
         .then(() => {
-          dispatch('SIGN_IN', {
-            email: payload.email,
-            password: payload.password
+          dispatch('signIn', {
+            email: user.email,
+            password: user.password
           })
         })
         .then(() => {
-          console.log(firebase.auth().currentUser.uid)
           firebase.firestore().collection('users')
           .doc(firebase.auth().currentUser.uid)
           .set({
-            email: payload.email,
-            name: payload.name,
+            email: user.email,
+            name: user.name,
             wallet: 0
           })
           .then(() => {
-            dispatch('GET_USERS')
+            dispatch('getUsers')
           })
         .catch(error => {
           commit("setError", error.message);
         })
       })
     },
-    SIGN_IN ({ dispatch, commit }, payload) {
+    signIn ({ dispatch, commit }, user) {
       firebase
         .auth()
-        .signInWithEmailAndPassword(payload.email, payload.password)
+        .signInWithEmailAndPassword(user.email, user.password)
         .then(() => {
           const db = firebase.firestore()
           const uid = firebase.auth().currentUser.uid
@@ -115,14 +137,14 @@ export default new Vuex.Store({
             commit('setUser', doc.data())
           })
           .then(() => {
-            dispatch('GET_USERS')
+            dispatch('getUsers')
           })
         })
         .catch(error => {
           commit('setError', error.message)
         })
     },
-    SIGN_OUT ({ commit }) {
+    signOut ({ commit }) {
       firebase
         .auth()
         .signOut()
@@ -132,6 +154,14 @@ export default new Vuex.Store({
         .catch(error => {
           commit('setError', error.message)
         })
+    },
+    // お金の移動を実行する処理がまだ怪しい
+    // 実行した処理がFirebaseに反映されるようにしたい
+    tipSelectedUser ({ dispatch, commit }, tip) {
+      dispatch('getSelectedUser', tip)
+      .then(() => {
+        commit('moneyTransfer')
+      })
     }
   }
 })
