@@ -8,11 +8,13 @@ export default new Vuex.Store({
   state: {
     user: {
       email: '',
+      id: '',
       name: '',
       wallet: '',
     },
     selectedUser: {
       email: '',
+      id: '',
       name: '',
       wallet: '',
     },
@@ -36,11 +38,7 @@ export default new Vuex.Store({
     setTip(state, tip) {
       state.tip = tip;
     },
-    // まだいじっている途中
     moneyTransfer(state) {
-      console.log(typeof(state.user.wallet))
-      console.log(typeof(state.selectedUser.wallet))
-      console.log(typeof(state.tip))
       state.user.wallet -= state.tip
       state.selectedUser.wallet += state.tip
     }
@@ -74,20 +72,24 @@ export default new Vuex.Store({
           commit("setUser", null);
         }
       })
-    },  
+    },
     getUsers ({ commit }) {
       const db = firebase.firestore()
-      const userRef = db.collection('users')
+      const userRef = db.collection('users').orderBy('name', 'asc')
       const userDoc = userRef.get() 
-      userDoc.then((querySnapshot) => {
+      userDoc
+      .then((querySnapshot) => {
         const userDocs = querySnapshot.docs.map(doc => doc.data())
-        const currentUserIndex = userDocs.findIndex(
+        const userIndex = userDocs.findIndex(
           item => item.name === this.state.user.name
         )
-        if (-1 < currentUserIndex) {
-          userDocs.splice(currentUserIndex, 1)
+        if (-1 < userIndex) {
+          userDocs.splice(userIndex, 1)
         }
         commit("setUsers", userDocs)
+      })
+      .catch(error => {
+        commit('setError', error.message)
       })
     },
     getSelectedUser ({ commit }, selectedUser) {
@@ -113,16 +115,17 @@ export default new Vuex.Store({
           .doc(firebase.auth().currentUser.uid)
           .set({
             email: user.email,
+            id: firebase.auth().currentUser.uid,
             name: user.name,
             wallet: 0
           })
-          .then(() => {
-            dispatch('getUsers')
-          })
+        })
+        .then(() => {
+          dispatch('getUsers')
+        })
         .catch(error => {
           commit("setError", error.message);
         })
-      })
     },
     signIn ({ dispatch, commit }, user) {
       firebase
@@ -136,9 +139,9 @@ export default new Vuex.Store({
           userDoc.then((doc) => {
             commit('setUser', doc.data())
           })
-          .then(() => {
-            dispatch('getUsers')
-          })
+        })
+        .then(() => {
+          dispatch('getUsers')
         })
         .catch(error => {
           commit('setError', error.message)
@@ -155,12 +158,34 @@ export default new Vuex.Store({
           commit('setError', error.message)
         })
     },
-    // お金の移動を実行する処理がまだ怪しい
-    // 実行した処理がFirebaseに反映されるようにしたい
     tipSelectedUser ({ dispatch, commit }, tip) {
       dispatch('getSelectedUser', tip)
       .then(() => {
         commit('moneyTransfer')
+      })
+      .then(() => {
+        const db = firebase.firestore()
+        const user = this.state.user
+        const selectedUser = this.state.selectedUser
+        const userDocRef = db.collection('users').doc(user.id)
+        const selectedUserDocRef = db.collection('users').doc(selectedUser.id)
+
+        db.runTransaction(transaction => {
+          return transaction.get(userDocRef).then(() => {
+            transaction.update(userDocRef, {
+              wallet: user.wallet
+            })
+          }),
+          transaction.get(selectedUserDocRef).then(() => {
+            transaction.update(selectedUserDocRef, {
+              wallet: selectedUser.wallet
+            })
+          })
+        })      
+      })
+      .catch(error => {
+        console.log(error.message)
+        commit('setError', error.message)
       })
     }
   }
